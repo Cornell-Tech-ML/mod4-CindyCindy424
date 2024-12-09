@@ -239,7 +239,41 @@ def _tensor_conv2d(
     s20, s21, s22, s23 = s2[0], s2[1], s2[2], s2[3]
 
     # TODO: Implement for Task 4.2.
-    raise NotImplementedError("Need to implement for Task 4.2")
+    # raise NotImplementedError("Need to implement for Task 4.2")
+    for idx in prange(out_size):
+        # Convert linear index to multi-dimensional index
+        output_index = np.empty(4, dtype=np.int32)
+        to_index(idx, out_shape, output_index)
+        batch_idx, out_channel_idx, out_row_idx, out_col_idx = output_index
+
+        result_value = 0.0
+        for in_channel_idx in prange(in_channels):
+            for kernel_row_idx in range(kh):
+                for kernel_col_idx in range(kw):
+                    if reverse:
+                        input_col_idx = out_col_idx - kernel_col_idx
+                        input_row_idx = out_row_idx - kernel_row_idx
+                    else:
+                        input_col_idx = out_col_idx + kernel_col_idx
+                        input_row_idx = out_row_idx + kernel_row_idx
+
+                    # Check if input indices are within bounds
+                    if 0 <= input_col_idx < width and 0 <= input_row_idx < height:
+                        input_position = (
+                            batch_idx * s1[0] +
+                            in_channel_idx * s1[1] +
+                            input_row_idx * s1[2] +
+                            input_col_idx * s1[3]
+                        )
+                        weight_position = (
+                            out_channel_idx * s2[0] +
+                            in_channel_idx * s2[1] +
+                            kernel_row_idx * s2[2] +
+                            kernel_col_idx * s2[3]
+                        )
+                        result_value += input[input_position] * weight[weight_position]
+
+        out[idx] = result_value
 
 
 tensor_conv2d = njit(_tensor_conv2d, parallel=True, fastmath=True)
