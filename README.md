@@ -41,7 +41,7 @@ The files that will be synced are:
 
 1. Commands:
 ```
-python project/run_sentiment.py > sentiment.txt 
+python project/run_sentiment.py > sentiment.txt
 python project/run_mnist_multiclass.py > mnist.txt
 ```
 

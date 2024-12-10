@@ -7,8 +7,6 @@ from numba import njit as _njit
 from .autodiff import Context
 from .tensor import Tensor
 from .tensor_data import (
-    MAX_DIMS,
-    Index,
     Shape,
     Strides,
     Storage,
@@ -106,10 +104,12 @@ def _tensor_conv1d(
                     w_pos = cur_out_width - cur_kw
                 if 0 <= w_pos < width:
                     in_pos = cur_batch * s1[0] + cur_in_channel * s1[1] + w_pos * s1[2]
-                    weight_pos = cur_out_channel * s2[0] + cur_in_channel * s2[1] + cur_kw * s2[2]
-                    val += (
-                        input[in_pos] * weight[weight_pos]
+                    weight_pos = (
+                        cur_out_channel * s2[0]
+                        + cur_in_channel * s2[1]
+                        + cur_kw * s2[2]
                     )
+                    val += input[in_pos] * weight[weight_pos]
         out[i] = val
 
 
@@ -260,16 +260,16 @@ def _tensor_conv2d(
                     # Check if input indices are within bounds
                     if 0 <= input_col_idx < width and 0 <= input_row_idx < height:
                         input_position = (
-                            batch_idx * s1[0] +
-                            in_channel_idx * s1[1] +
-                            input_row_idx * s1[2] +
-                            input_col_idx * s1[3]
+                            batch_idx * s1[0]
+                            + in_channel_idx * s1[1]
+                            + input_row_idx * s1[2]
+                            + input_col_idx * s1[3]
                         )
                         weight_position = (
-                            out_channel_idx * s2[0] +
-                            in_channel_idx * s2[1] +
-                            kernel_row_idx * s2[2] +
-                            kernel_col_idx * s2[3]
+                            out_channel_idx * s2[0]
+                            + in_channel_idx * s2[1]
+                            + kernel_row_idx * s2[2]
+                            + kernel_col_idx * s2[3]
                         )
                         result_value += input[input_position] * weight[weight_position]
 
