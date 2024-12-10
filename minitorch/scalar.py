@@ -64,6 +64,7 @@ class Scalar:
     unique_id: int = field(default=0)
 
     def __post_init__(self):
+        """The function is used to initialize the scalar."""
         global _var_count
         _var_count += 1
         object.__setattr__(self, "unique_id", _var_count)
@@ -71,24 +72,31 @@ class Scalar:
         object.__setattr__(self, "data", float(self.data))
 
     def __repr__(self) -> str:
+        """The function is used to represent the scalar."""
         return f"Scalar({self.data})"
 
     def __mul__(self, b: ScalarLike) -> Scalar:
+        """The function is used to multiply two scalars."""
         return Mul.apply(self, b)
 
     def __truediv__(self, b: ScalarLike) -> Scalar:
+        """The function is used to divide two scalars."""
         return Mul.apply(self, Inv.apply(b))
 
     def __rtruediv__(self, b: ScalarLike) -> Scalar:
+        """The function is used to divide two scalars."""
         return Mul.apply(b, Inv.apply(self))
 
     def __bool__(self) -> bool:
+        """The function is used to convert a scalar to a boolean."""
         return bool(self.data)
 
     def __radd__(self, b: ScalarLike) -> Scalar:
+        """The function is used to add two scalars."""
         return self + b
 
     def __rmul__(self, b: ScalarLike) -> Scalar:
+        """The function is used to multiply two scalars."""
         return self * b
 
     # Variable elements for backprop
@@ -108,25 +116,30 @@ class Scalar:
         self.__setattr__("derivative", self.derivative + x)
 
     def is_leaf(self) -> bool:
-        """True if this variable created by the user (no `last_fn`)"""
+        """The function is used to check if the scalar is a leaf."""
         return self.history is not None and self.history.last_fn is None
 
     def is_constant(self) -> bool:
+        """The function is used to check if the scalar is a constant."""
         return self.history is None
 
     @property
     def parents(self) -> Iterable[Variable]:
-        """Get the variables used to create this one."""
+        """The function is used to get the parents of the scalar."""
         assert self.history is not None
         return self.history.inputs
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
+        """The function is used to apply the chain rule to the scalar."""
         h = self.history
         assert h is not None
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 1.3.
+        # raise NotImplementedError("Need to implement for Task 1.3")
+        x = h.last_fn._backward(h.ctx, d_output)
+        return list(zip(h.inputs, x))
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """Calls autodiff to fill in the derivatives for the history of this object.
@@ -141,15 +154,55 @@ class Scalar:
             d_output = 1.0
         backpropagate(self, d_output)
 
-    raise NotImplementedError("Need to include this file from past assignment.")
+    # TODO: Implement for Task 1.2.
+    # raise NotImplementedError("Need to implement for Task 1.2")
+    def __lt__(self, b: ScalarLike) -> Scalar:
+        """The function is used to compare two scalars."""
+        return LT.apply(self, b)
+
+    def __gt__(self, b: ScalarLike) -> Scalar:
+        """The function is used to compare two scalars."""
+        return LT.apply(b, self)
+
+    def __sub__(self, b: ScalarLike) -> Scalar:
+        """The function is used to subtract two scalars."""
+        return Add.apply(self, Neg.apply(b))
+
+    def __neg__(self) -> Scalar:
+        """The function is used to negate a scalar."""
+        return Neg.apply(self)
+
+    def __add__(self, b: ScalarLike) -> Scalar:
+        """The function is used to add two scalars."""
+        return Add.apply(self, b)
+
+    def __eq__(self, b: ScalarLike) -> Scalar:
+        """The function is used to compare two scalars."""
+        return EQ.apply(b, self)
+
+    def log(self) -> Scalar:
+        """The function is used to calculate the logarithm of a scalar."""
+        return Log.apply(self)
+
+    def exp(self) -> Scalar:
+        """The function is used to calculate the exponential of a scalar."""
+        return Exp.apply(self)
+
+    def sigmoid(self) -> Scalar:
+        """The function is used to calculate the sigmoid of a scalar."""
+        return Sigmoid.apply(self)
+
+    def relu(self) -> Scalar:
+        """The function is used to calculate the ReLU of a scalar."""
+        return ReLU.apply(self)
 
 
 def derivative_check(f: Any, *scalars: Scalar) -> None:
     """Checks that autodiff works on a python function.
     Asserts False if derivative is incorrect.
 
-    Parameters
-    ----------
+    Args:
+    ----
         f : function from n-scalars to 1-scalar.
         *scalars  : n input scalar values.
 
